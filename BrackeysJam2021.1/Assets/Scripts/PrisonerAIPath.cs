@@ -5,8 +5,8 @@ using Pathfinding;
 
 public class PrisonerAIPath : AIPath
 {
-    public override void OnTargetReached()
-    {
-        PlayerCommands.AddPrisonerToPlayersControl(this.gameObject);
-    }
+    // public override void OnTargetReached()
+    // {
+    //     PlayerCommands.AddPrisonerToPlayersControl(this.gameObject);
+    // }
 }

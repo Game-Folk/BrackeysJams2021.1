@@ -6,6 +6,7 @@ using UnityEngine;
 public class PlayerCommands : MonoBehaviour
 {
     [SerializeField] private GameObject destinationTargetPrefab = null;
+    [SerializeField] private float recruitDistance = 5f;
 
     public static PlayerCommands instance;
     private void Awake()
@@ -16,13 +17,17 @@ public class PlayerCommands : MonoBehaviour
             return;
         }
         instance = this;
+
+        _recruitDistance = recruitDistance;
     }
     
-    public static event Action<Transform> OnPrisonersRecalled;
+    public static event Action<Transform> OnPrisonersRecruitedAndRecalled;
     
+    private static float _recruitDistance = 5f;
     private static List<GameObject> prisonersUnoccupied = new List<GameObject>();
     private static List<GameObject> prisonersOccupied = new List<GameObject>();
 
+    // Unoccupies all prisoners under player's control (recruited)
     public static void AddPrisonerToPlayersControl(GameObject prisonerGO)
     {
         // if an occupied prisoner, remove it from occupied
@@ -32,12 +37,20 @@ public class PlayerCommands : MonoBehaviour
         if(!prisonersUnoccupied.Contains(prisonerGO)) prisonersUnoccupied.Add(prisonerGO);
     }
 
+    public static float GetRecruitDistance()
+    {
+        return _recruitDistance;
+    }
+
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown("space")) // Recall Prisoners
+        if (Input.GetKeyDown("space")) // "Recall" and/or "Recruit" Prisoners
         {
-            OnPrisonersRecalled?.Invoke(this.transform);
+            // TODO: instantiate a circle of recruit radius
+
+            // Recruit, then recall all already recruited
+            OnPrisonersRecruitedAndRecalled?.Invoke(this.transform);
 
             // unoccupy every prisoner
             foreach(GameObject prisonerGO in prisonersOccupied)
@@ -63,6 +76,7 @@ public class PlayerCommands : MonoBehaviour
 
     private void SendPrisoner(Transform targetPos)
     {
+        print(prisonersUnoccupied.Count);
         // check if prisoners available
         if(prisonersUnoccupied.Count < 1)
         {
