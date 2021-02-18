@@ -21,20 +21,24 @@ public class PlayerCommands : MonoBehaviour
         _recruitDistance = recruitDistance;
     }
     
-    public static event Action<Transform> OnPrisonersRecruitedAndRecalled;
-    
     private static float _recruitDistance = 5f;
-    private static List<GameObject> prisonersUnoccupied = new List<GameObject>();
-    private static List<GameObject> prisonersOccupied = new List<GameObject>();
+    private List<Monkey> unrecruitedMonkeysList = new List<Monkey>();
+    private List<Monkey> occupiedMonkeysList = new List<Monkey>();
+    private List<Monkey> unoccupiedMonkeysList = new List<Monkey>();
 
-    // Unoccupies all prisoners under player's control (recruited)
-    public static void AddPrisonerToPlayersControl(GameObject prisonerGO)
+    public void AddToUnrecruitedList(Monkey monkey)
     {
-        // if an occupied prisoner, remove it from occupied
-        if(prisonersOccupied.Contains(prisonerGO)) prisonersOccupied.Remove(prisonerGO);
+        unrecruitedMonkeysList.Add(monkey);
+    }
 
-        // if not already in list, add it
-        if(!prisonersUnoccupied.Contains(prisonerGO)) prisonersUnoccupied.Add(prisonerGO);
+    // Unoccupies all monkeys under player's control (has been recruited)
+    public void AddMonkeyToPlayersControl(Monkey monkey)
+    {
+        // if monkey was occupied, unoccupy it
+        if(occupiedMonkeysList.Contains(monkey)) occupiedMonkeysList.Remove(monkey);
+
+        // if monkey is not already in the unoccupied list, add it
+        if(!unoccupiedMonkeysList.Contains(monkey)) unoccupiedMonkeysList.Add(monkey);
     }
 
     public static float GetRecruitDistance()
@@ -50,14 +54,7 @@ public class PlayerCommands : MonoBehaviour
             // TODO: instantiate a circle of recruit radius
 
             // Recruit, then recall all already recruited
-            OnPrisonersRecruitedAndRecalled?.Invoke(this.transform);
-
-            // unoccupy every prisoner
-            foreach(GameObject prisonerGO in prisonersOccupied)
-            {
-                prisonersUnoccupied.Add(prisonerGO);
-            }
-            prisonersOccupied.Clear();
+            RecruitAndRecall();
         }
         else if (Input.GetMouseButtonDown(0)) // Send prisoner to location/object
         {
@@ -74,22 +71,68 @@ public class PlayerCommands : MonoBehaviour
         }
     }
 
+    private void RecruitAndRecall()
+    {
+        List<Monkey> recruitedMonkeys = new List<Monkey>();
+        foreach(Monkey m in unrecruitedMonkeysList)
+        {
+            // if not yet recruited
+            if(!m.GetRecruitedStatus())
+            {
+                // check recruit distance
+                float distance = Vector2.Distance(m.transform.position, transform.position);
+                if(distance < GetRecruitDistance())
+                {
+                    // recruit!
+                    m.SetRecruitedStatus(true);
+                    AddMonkeyToPlayersControl(m);
+                    recruitedMonkeys.Add(m);
+                }
+            }
+        }
+        foreach(Monkey m in recruitedMonkeys)
+        {
+            unrecruitedMonkeysList.Remove(m);
+        }     
+
+        Recall();
+    }
+
+    private void Recall()
+    {
+        List<Monkey> newOccupiedMonkeysList = new List<Monkey>();
+        foreach(Monkey m in occupiedMonkeysList)
+        {
+            newOccupiedMonkeysList.Add(m);
+            m.SetRecalledStatus(true);
+        }
+        foreach(Monkey m in newOccupiedMonkeysList)
+        {
+            AddMonkeyToPlayersControl(m);
+        }
+        foreach(Monkey m in unoccupiedMonkeysList)
+        {
+            m.SetRecalledStatus(true);
+        }
+    }
+
     private void SendPrisoner(Transform targetPos)
     {
-        print(prisonersUnoccupied.Count);
         // check if prisoners available
-        if(prisonersUnoccupied.Count < 1)
+        if(unoccupiedMonkeysList.Count < 1)
         {
-            Debug.Log("PlayerCommands: No prisoners available.");
+            Debug.Log("PlayerCommands: No monkeys available.");
             // TODO: display a message on screen? a noise?
             return;
         }
 
         // Select 1st prisoner from list of unoccupiedPrisoners
-        GameObject prisonerToOccupy = prisonersUnoccupied[0];
-        prisonersOccupied.Add(prisonerToOccupy);
-        prisonersUnoccupied.Remove(prisonerToOccupy);
+        Monkey monkeyToOccupy = unoccupiedMonkeysList[0];
+        occupiedMonkeysList.Add(monkeyToOccupy);
+        unoccupiedMonkeysList.Remove(monkeyToOccupy);
 
-        prisonerToOccupy.GetComponent<PrisonerMovement>().SetDestination(targetPos);
+        // monkeyToOccupy.SetRecalledStatus(false);
+        // monkeyToOccupy.SetDestination(targetPos);
+        monkeyToOccupy.SetStandByLocation(targetPos);
     }
 }

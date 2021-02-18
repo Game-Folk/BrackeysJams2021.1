@@ -7,6 +7,7 @@ public class PrisonerMovement : MonoBehaviour
 {
     [SerializeField] private float massToPushThrough = 10f;
     [SerializeField] private float timeToBeHeavy = 5f;
+    [SerializeField] private Color recruitColor;
 
     private AIDestinationSetter aIDestinationSetter;
     private Rigidbody2D rgbd;
@@ -14,7 +15,7 @@ public class PrisonerMovement : MonoBehaviour
 
     void Awake()
     {
-        PlayerCommands.OnPrisonersRecruitedAndRecalled += RecruitAndRecallPrisoner;
+        // PlayerCommands.OnPrisonersRecruitedAndRecalled += RecruitAndRecallPrisoner;
 
         aIDestinationSetter = GetComponent<AIDestinationSetter>();
         rgbd = GetComponent<Rigidbody2D>();
@@ -32,25 +33,32 @@ public class PrisonerMovement : MonoBehaviour
         aIDestinationSetter.target = dest;
     }
 
-    private void RecruitAndRecallPrisoner(Transform playerPos)
+    public bool GetRecruitedStatus()
     {
-        // recruit
-        if(!recruited)
-        {
-            // check recruitDistance
-            float distance = Vector3.Distance(this.transform.position, playerPos.position);
-            if(distance < PlayerCommands.GetRecruitDistance())
-            {
-                // recruit!
-                recruited = true;
-                PlayerCommands.AddPrisonerToPlayersControl(this.gameObject);
-            }
-        }
-
-        // recall only if already recruited
-        if(!recruited) return;
-        aIDestinationSetter.target = playerPos;
+        return recruited;
     }
+
+    // private void RecruitAndRecallPrisoner(Transform playerPos)
+    // {
+    //     // recruit
+    //     if(!recruited)
+    //     {
+    //         // check recruitDistance
+    //         float distance = Vector3.Distance(this.transform.position, playerPos.position);
+    //         if(distance < PlayerCommands.GetRecruitDistance())
+    //         {
+    //             // recruit!
+    //             recruited = true;
+    //             PlayerCommands.AddPrisonerToPlayersControl(this.gameObject);
+    //             // set recruited color
+    //             this.transform.GetChild(0).GetComponent<SpriteRenderer>().color = recruitColor;
+    //         }
+    //     }
+
+    //     // recall only if already recruited
+    //     if(!recruited) return;
+    //     aIDestinationSetter.target = playerPos;
+    // }
 
     private IEnumerator ResetMass(float mass_OG, float timeToBeHeavy)
     {
