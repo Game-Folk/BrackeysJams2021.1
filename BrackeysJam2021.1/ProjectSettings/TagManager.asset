@@ -15,7 +15,7 @@ TagManager:
   - 
   - Floor
   - Walls
-  - 
+  - Obstacles
   - 
   - 
   - 
@@ -47,9 +47,15 @@ TagManager:
   - name: Default
     uniqueID: 0
     locked: 0
+  - name: Target
+    uniqueID: 1194281527
+    locked: 0
   - name: Units
     uniqueID: 1561104003
     locked: 0
   - name: Player
     uniqueID: 45020727
+    locked: 0
+  - name: InteractableObject
+    uniqueID: 888847319
     locked: 0

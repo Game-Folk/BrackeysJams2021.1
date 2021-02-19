@@ -4,13 +4,11 @@ using UnityEngine;
 
 public class SetFollowTargetNode : Node
 {
-    private Monkey monkey;
-    private Transform target;
+    private BaseAIUnit baseAIUnit;
 
-    public SetFollowTargetNode(Monkey monkey, Transform target)
+    public SetFollowTargetNode(BaseAIUnit baseAIUnit)
     {
-        this.monkey = monkey;
-        this.target = target;
+        this.baseAIUnit = baseAIUnit;
     }
 
     public override NodeState Evaluate()
@@ -18,9 +16,7 @@ public class SetFollowTargetNode : Node
         // NOTE: should always return true... as I don't do any error checking
         // NOTE 2: target doesn't get unset... but is also set couple times a second
         // Set the destination to the target's transform
-        _nodeState = monkey.SetDestination(target) ? NodeState.RUNNING : NodeState.FAILURE;
-        Debug.Log("set dest " + target);
-        Debug.Log(target);
+        _nodeState = baseAIUnit.SetDestination(null) ? NodeState.RUNNING : NodeState.FAILURE;
         return _nodeState;
     }
 }

@@ -2,11 +2,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class PlayerCommands : MonoBehaviour
 {
     [SerializeField] private GameObject destinationTargetPrefab = null;
+    [SerializeField] private float timeToDestroyUnassignedTarget = 3f;
     [SerializeField] private float recruitDistance = 5f;
+    [SerializeField] private TMP_Text followerCountText = null;
 
     public static PlayerCommands instance;
     private void Awake()
@@ -19,12 +22,17 @@ public class PlayerCommands : MonoBehaviour
         instance = this;
 
         _recruitDistance = recruitDistance;
+        lion = GetComponent<Lion>();
     }
     
     private static float _recruitDistance = 5f;
     private List<Monkey> unrecruitedMonkeysList = new List<Monkey>();
     private List<Monkey> occupiedMonkeysList = new List<Monkey>();
     private List<Monkey> unoccupiedMonkeysList = new List<Monkey>();
+    private List<Transform> interactableObjects = new List<Transform>();
+    private List<InteractableObject> currentInteractedObjects = new List<InteractableObject>();
+
+    private Lion lion = null;
 
     public void AddToUnrecruitedList(Monkey monkey)
     {
@@ -46,6 +54,15 @@ public class PlayerCommands : MonoBehaviour
         return _recruitDistance;
     }
 
+    public void AddInteractableObject(Transform t)
+    {
+        interactableObjects.Add(t);
+    }
+    public void RemoveInteractableObject(Transform t)
+    {
+        interactableObjects.Remove(t);
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -56,18 +73,22 @@ public class PlayerCommands : MonoBehaviour
             // Recruit, then recall all already recruited
             RecruitAndRecall();
         }
-        else if (Input.GetMouseButtonDown(0)) // Send prisoner to location/object
+        else if(Input.GetMouseButtonDown(0)) // left click to stomp
         {
-
+            lion.StompAttack();
+        }
+        else if (Input.GetMouseButtonDown(1)) // right click Send prisoner to location/object
+        {
             Vector3 worldPoint = Input.mousePosition;
             worldPoint.z = Mathf.Abs(Camera.main.transform.position.z);
             Vector3 mouseWorldPosition = Camera.main.ScreenToWorldPoint(worldPoint);
             mouseWorldPosition.z = 0f;
-            
+
             // Create target
             GameObject target = Instantiate(destinationTargetPrefab, mouseWorldPosition, Quaternion.identity);
 
-            SendPrisoner(target.transform);
+            bool prisonerHasTarget = SendPrisoner(target.transform);
+            if(!prisonerHasTarget) Destroy(target, timeToDestroyUnassignedTarget);
         }
     }
 
@@ -114,25 +135,61 @@ public class PlayerCommands : MonoBehaviour
         {
             m.SetRecalledStatus(true);
         }
+        UpdateFollowerCounts();
+
+        // reduce the count on each of the objects we've sent them to
+        foreach(InteractableObject io in currentInteractedObjects)
+        {
+            io.RemoveAllMinions();
+        }
     }
 
-    private void SendPrisoner(Transform targetPos)
+    // true if success
+    // false if failure
+    private bool SendPrisoner(Transform targetPos)
     {
         // check if prisoners available
         if(unoccupiedMonkeysList.Count < 1)
         {
             Debug.Log("PlayerCommands: No monkeys available.");
             // TODO: display a message on screen? a noise?
-            return;
+            return false;
         }
 
         // Select 1st prisoner from list of unoccupiedPrisoners
         Monkey monkeyToOccupy = unoccupiedMonkeysList[0];
         occupiedMonkeysList.Add(monkeyToOccupy);
         unoccupiedMonkeysList.Remove(monkeyToOccupy);
+        UpdateFollowerCounts();
 
-        // monkeyToOccupy.SetRecalledStatus(false);
-        // monkeyToOccupy.SetDestination(targetPos);
+        // Interactable Object ------------------
+        foreach(Transform interactableObject in interactableObjects)
+        {
+            float distance = Vector2.Distance(interactableObject.position, targetPos.position);
+            if(distance < 0.5f)
+            {
+                // interO
+                InteractableObject interO = interactableObject.GetComponent<InteractableObject>();
+                interO.AddMinion(monkeyToOccupy.transform);
+                currentInteractedObjects.Add(interO); // keep track of where your minions are
+
+                // send minion
+                monkeyToOccupy.SetInteractTarget(interO);
+                monkeyToOccupy.SetInteractTargetTransform(interactableObject);
+
+                return false; // returning false so this script takes care of deleting target
+            }
+        }
+        
+        // Location ----------------------------------
         monkeyToOccupy.SetStandByLocation(targetPos);
+        return true;
+    }
+
+    private void UpdateFollowerCounts()
+    {
+        int unoccupied = unoccupiedMonkeysList.Count;
+        int total = occupiedMonkeysList.Count + unoccupied;
+        followerCountText.text = unoccupied + "/" + total;
     }
 }

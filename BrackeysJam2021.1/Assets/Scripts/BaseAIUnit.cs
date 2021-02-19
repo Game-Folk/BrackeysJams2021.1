@@ -10,9 +10,11 @@ public class BaseAIUnit : BaseUnit
     [SerializeField] protected float massToPushThrough = 10f;
     [SerializeField] protected float timeToBeHeavy = 5f;
     [SerializeField] protected float attackSearchRange = 5f;
+    [SerializeField] protected float timeToDestroyStandByTarget = 3f;
 
     private AIDestinationSetter aIDestinationSetter;
     private Rigidbody2D rgbd;
+    protected Transform targetTransform = null;
     protected BaseUnit attackTarget = null;
     protected Transform standByLocation = null;
 
@@ -74,7 +76,16 @@ public class BaseAIUnit : BaseUnit
 
             if(Vector2.Distance(attackTarget.transform.position, transform.position) < attackRange)
             {
-                attackTarget.AddCurrentHealth(-attack);
+                BaseUnit attackTargetTemp = attackTarget;
+
+                // check if you'll kill the target
+                if(attackTargetTemp.GetCurrentHealth() - attack <= 0)
+                {
+                    targetTransform = standByLocation;
+                    // reset attack target
+                    attackTarget = null;
+                }
+                attackTargetTemp.AddCurrentHealth(-attack);
             }
             yield return new WaitForSeconds(1/attacksPerSecond);
         }
@@ -91,7 +102,7 @@ public class BaseAIUnit : BaseUnit
         }
         if(!nameOfAction.Equals("Standing By"))
         {
-            standByLocation = null;
+            // standByLocation = null;
         }
     }
     
@@ -101,8 +112,13 @@ public class BaseAIUnit : BaseUnit
         StartCoroutine(ResetMass(rgbd.mass, timeToBeHeavy));
         rgbd.mass = massToPushThrough;
 
-        aIDestinationSetter.target = dest;
+        if(dest == null)
+        {
+            aIDestinationSetter.target = targetTransform;
+            return true;
+        }
 
+        aIDestinationSetter.target = dest;
         return true;
     }
     private IEnumerator ResetMass(float mass_OG, float timeToBeHeavy)
@@ -118,6 +134,7 @@ public class BaseAIUnit : BaseUnit
     public void SetAttackTarget(BaseUnit newAttackTarget)
     {
         attackTarget = newAttackTarget;
+        targetTransform = newAttackTarget.transform;
         ResetActionFlags("Attacking");
     }
 
@@ -127,8 +144,14 @@ public class BaseAIUnit : BaseUnit
     }
     public void SetStandByLocation(Transform newStandByLocation)
     {
+        // if already has a stand by location
+        if(standByLocation != null)
+        {
+            Destroy(standByLocation.gameObject, timeToDestroyStandByTarget);
+        }
+
         standByLocation = newStandByLocation;
-        print("set " + standByLocation);
+        targetTransform = newStandByLocation;
         ResetActionFlags("Standing By");
     }
 }

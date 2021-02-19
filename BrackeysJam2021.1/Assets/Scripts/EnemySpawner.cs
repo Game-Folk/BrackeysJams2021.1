@@ -4,11 +4,10 @@ using UnityEngine;
 
 public class EnemySpawner : MonoBehaviour
 {
+    [SerializeField] private bool allowedToSpawn = true;
     [SerializeField] private float secondsPerSpawn = 1f;
     [SerializeField] private int numToSpawn = 3;
     [SerializeField] private GameObject enemy = null;
-
-    private List<Transform> enemyTransformsList = new List<Transform>();
 
     public static EnemySpawner instance;
     private void Awake()
@@ -27,21 +26,22 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnEnemies());
     }
 
+    public void SetAllowedToSpawnStatus(bool b)
+    {
+        allowedToSpawn = b;
+    }
+
     private IEnumerator SpawnEnemies()
     {
         while(true)
         {
             yield return new WaitForSeconds(secondsPerSpawn);
+            if(!allowedToSpawn) continue; // don't spawn if not allowed to
+
             for(int i = 0; i < numToSpawn; i++)
             {
                 GameObject go = Instantiate(enemy, transform.position, Quaternion.identity);
-                enemyTransformsList.Add(go.transform);
             }
         }
-    }
-
-    public List<Transform> GetEnemyTransformsList()
-    {
-        return enemyTransformsList;
     }
 }

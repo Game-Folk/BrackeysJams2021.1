@@ -7,7 +7,9 @@ using Pathfinding;
 public class Monkey : BaseAIUnit
 {
     [SerializeField] private Color recruitColor;
+    [SerializeField] private SpriteRenderer spriteRenderer;
 
+    private UnitManager unitManager = null;
     private EnemySpawner enemySpawner = null;
     private PlayerCommands playerCommands = null;
     private bool recruited = false;
@@ -22,6 +24,7 @@ public class Monkey : BaseAIUnit
     
     public override void Start()
     {
+        unitManager = UnitManager.instance;
         enemySpawner = EnemySpawner.instance;
         playerCommands = PlayerCommands.instance;
 
@@ -36,22 +39,18 @@ public class Monkey : BaseAIUnit
 
         IsRecruitedNode isRecruitedNode = new IsRecruitedNode(this);
         HasBeenRecalledNode hasBeenRecalledNode = new HasBeenRecalledNode(this);
-        SetFollowTargetNode setFollowPlayerNode = new SetFollowTargetNode(this, PlayerCommands.instance.transform);
+        SetFollowTargetNode setFollowTargetNode = new SetFollowTargetNode(this);
         HasAnInteractTargetNode hasAnInteractTargetNode = new HasAnInteractTargetNode(this);
-        SetFollowTargetNode setFollowInteractableNode = new SetFollowTargetNode(this, interactTargetTransform);
         IfAnyAttackTargetInRangeSetClosestNode ifAnyAttackTargetInRangeSetClosestNode = 
-            new IfAnyAttackTargetInRangeSetClosestNode(attackSearchRange, enemySpawner.GetEnemyTransformsList(), this);
+            new IfAnyAttackTargetInRangeSetClosestNode(attackSearchRange, unitManager.GetAttackableHumansList(), this);
         Transform attackTargetTransform = null;
         if(attackTarget != null) attackTargetTransform = attackTarget.transform;
-        SetFollowTargetNode setFollowAttackTargetNode = new SetFollowTargetNode(this, attackTargetTransform);
         HasALocationTargetNode hasALocationTargetNode = new HasALocationTargetNode(this);
-        print("Monkey: " + standByLocation);
-        SetFollowTargetNode setFollowStandByTargetNode = new SetFollowTargetNode(this, standByLocation);
 
-        Sequence followingSequence = new Sequence(new List<Node> { hasBeenRecalledNode, setFollowPlayerNode });
-        Sequence interactingSequence = new Sequence(new List<Node> { hasAnInteractTargetNode, setFollowInteractableNode });
-        Sequence attackingSequence = new Sequence(new List<Node> { ifAnyAttackTargetInRangeSetClosestNode, setFollowAttackTargetNode });
-        Sequence standingBySequence = new Sequence(new List<Node> { hasALocationTargetNode, setFollowStandByTargetNode });
+        Sequence followingSequence = new Sequence(new List<Node> { hasBeenRecalledNode, setFollowTargetNode });
+        Sequence interactingSequence = new Sequence(new List<Node> { hasAnInteractTargetNode, setFollowTargetNode });
+        Sequence attackingSequence = new Sequence(new List<Node> { ifAnyAttackTargetInRangeSetClosestNode, setFollowTargetNode });
+        Sequence standingBySequence = new Sequence(new List<Node> { hasALocationTargetNode, setFollowTargetNode });
 
         Selector pickActionSelector = new Selector(new List<Node> { followingSequence, interactingSequence, 
                                                             attackingSequence, standingBySequence });
@@ -75,6 +74,13 @@ public class Monkey : BaseAIUnit
             interactTargetTransform = null;
         }
     }
+
+    public override void Die(float timeUntilDestroy)
+    {
+        unitManager.RemoveAnimalFromAttackableList(this.transform);
+
+        base.Die(timeUntilDestroy);
+    }
     
     public bool GetRecruitedStatus()
     {
@@ -87,7 +93,10 @@ public class Monkey : BaseAIUnit
         if(recruited)
         {
             // set recruited color
-            this.transform.GetChild(0).GetComponent<SpriteRenderer>().color = recruitColor;
+            spriteRenderer.color = recruitColor;
+
+            // make attackable
+            unitManager.AddAnimalToAttackableList(transform);
         }
     }
     
@@ -98,6 +107,7 @@ public class Monkey : BaseAIUnit
     public void SetRecalledStatus(bool b)
     {
         recalled = b;
+        targetTransform = PlayerCommands.instance.transform;
         ResetActionFlags("Following");
     }
 
@@ -117,5 +127,6 @@ public class Monkey : BaseAIUnit
     public void SetInteractTargetTransform(Transform newInteractTargetTransform)
     {
         interactTargetTransform = newInteractTargetTransform;
+        targetTransform = newInteractTargetTransform;
     }
 }
