@@ -27,7 +27,7 @@ public class Key : InteractableObject
     {
         base.Start();
 
-        monkeySpawner = MonkeySpawner.instance;
+        monkeySpawner = MonkeySpawner.instance; // so we can spawn monkeys
 
         aIDestinationSetter.target = monkeySpawner.transform; // target is the monkey cages for keys
 

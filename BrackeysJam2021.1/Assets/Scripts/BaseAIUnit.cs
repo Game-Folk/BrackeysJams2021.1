@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 using Pathfinding;
-using System;
 
 public class BaseAIUnit : BaseUnit
 {
@@ -11,9 +10,13 @@ public class BaseAIUnit : BaseUnit
     [SerializeField] protected float timeToBeHeavy = 5f;
     [SerializeField] protected float attackSearchRange = 5f;
     [SerializeField] protected float timeToDestroyStandByTarget = 3f;
+    [SerializeField] private Transform spriteTransform = null;
+    [SerializeField] private AudioSource affirmativeActionAudio = null;
 
+    private AIPath aIPath;
     private AIDestinationSetter aIDestinationSetter;
     private Rigidbody2D rgbd;
+    private float mass_OG;
     protected Transform targetTransform = null;
     protected BaseUnit attackTarget = null;
     protected Transform standByLocation = null;
@@ -24,8 +27,10 @@ public class BaseAIUnit : BaseUnit
     {
         base.Awake();
 
+        aIPath = GetComponent<AIPath>();
         aIDestinationSetter = GetComponent<AIDestinationSetter>();
         rgbd = GetComponent<Rigidbody2D>();
+        mass_OG = rgbd.mass;
     }
 
     public override void Start()
@@ -40,7 +45,18 @@ public class BaseAIUnit : BaseUnit
     public override void Update()
     {
         base.Update();
+
+        UpdateAnimator();
+        CorrectDirectionFacing();
     }
+
+    public override void Die(float timeUntilDestroy)
+    {
+        base.Die(timeUntilDestroy);
+
+        aIPath.maxSpeed = 0;
+    }
+
     
     public virtual void ConstructBehaviorTree()
     {
@@ -106,11 +122,32 @@ public class BaseAIUnit : BaseUnit
         }
     }
     
+    public virtual void UpdateAnimator()
+    {
+        // Moving & idling
+        float x = Mathf.Pow( Mathf.Abs(aIPath.velocity[0]), 2 );
+        float y = Mathf.Pow( Mathf.Abs(aIPath.velocity[1]), 2 );
+        float speed = Mathf.Sqrt( x + y );
+        animator.SetFloat("Speed", speed);
+        
+        // Attacking
+        // TODO: move this to attack, and change to a trigger instead of bool
+        if(attackTarget == null)
+        {
+            animator.SetBool("Attacking", false);
+        }
+        else
+        {
+            animator.SetBool("Attacking", true);
+        }
+    }
+    
     public bool SetDestination(Transform dest)
     {
         // Set its mass so it can push through
-        StartCoroutine(ResetMass(rgbd.mass, timeToBeHeavy));
-        rgbd.mass = massToPushThrough;
+        // StartCoroutine(ResetMass(mass_OG, timeToBeHeavy));
+        // rgbd.mass = massToPushThrough;
+        // NOTE: this^ appears to cause more problems than solutions
 
         if(dest == null)
         {
@@ -150,8 +187,37 @@ public class BaseAIUnit : BaseUnit
             Destroy(standByLocation.gameObject, timeToDestroyStandByTarget);
         }
 
+        PlayAffirmativeActionSound();
+
         standByLocation = newStandByLocation;
         targetTransform = newStandByLocation;
         ResetActionFlags("Standing By");
     }
+
+    protected void PlayAffirmativeActionSound()
+    {
+        // play audio if exists
+        if(affirmativeActionAudio == null)
+        {
+            Debug.Log("BaseAIUnit: " + gameObject.name + " has no affirmative audio source");
+        }
+        else
+        {
+            affirmativeActionAudio.Play();
+        }
+    }
+
+    private void CorrectDirectionFacing()
+    {
+        // negative, y rot = 0
+        if(aIPath.velocity[0] < 0)
+        {
+            spriteTransform.eulerAngles = new Vector3(spriteTransform.eulerAngles.x, 0, spriteTransform.eulerAngles.z);
+        }
+        else if(aIPath.velocity[0] > 0) // positive, y rot = 180
+        {
+            spriteTransform.eulerAngles = new Vector3(spriteTransform.eulerAngles.x, 180, spriteTransform.eulerAngles.z);
+        }
+    }
+
 }

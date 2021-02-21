@@ -34,6 +34,8 @@ public class Zookeeper : BaseAIUnit
 
     public override void Die(float timeUntilDestroy)
     {
+        base.Die(timeUntilDestroy);
+        
         unitManager.RemoveHumanFromAttackableList(this.transform);
 
         // spawn a key by chance
@@ -42,7 +44,5 @@ public class Zookeeper : BaseAIUnit
         {
             Instantiate(keyPrefab, transform.position, Quaternion.identity);
         }
-
-        base.Die(timeUntilDestroy);
     }
 }

@@ -23,7 +23,7 @@ public class Lion : BaseUnit
     public void StompAttack()
     {
         // Play animation
-
+        animator.SetTrigger("Attack");
 
         // collect enemies within range
         List<BaseUnit> enemiesInRange = new List<BaseUnit>();
@@ -41,5 +41,17 @@ public class Lion : BaseUnit
         {
             enemy.AddCurrentHealth(-stompAttackDamage);
         }
+    }
+
+    public override void Die(float timeUntilDestroy)
+    {
+        base.Die(timeUntilDestroy);
+
+        // bring up defeat
+        GetComponent<EnableCanvas>().EnableThisCanvas();
+
+        // disable movement
+        PlayerCommands.instance.enabled = false;
+        GetComponent<PlayerMovement>().enabled = false;
     }
 }

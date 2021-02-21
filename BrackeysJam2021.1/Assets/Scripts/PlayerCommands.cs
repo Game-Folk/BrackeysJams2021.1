@@ -10,6 +10,7 @@ public class PlayerCommands : MonoBehaviour
     [SerializeField] private float timeToDestroyUnassignedTarget = 3f;
     [SerializeField] private float recruitDistance = 5f;
     [SerializeField] private TMP_Text followerCountText = null;
+    [SerializeField] protected Animator animator = null;
 
     public static PlayerCommands instance;
     private void Awake()
@@ -47,6 +48,13 @@ public class PlayerCommands : MonoBehaviour
 
         // if monkey is not already in the unoccupied list, add it
         if(!unoccupiedMonkeysList.Contains(monkey)) unoccupiedMonkeysList.Add(monkey);
+    }
+
+    public void RemoveMonkeyFromPlayer(Monkey monkey)
+    {
+        if(unrecruitedMonkeysList.Contains(monkey)) unrecruitedMonkeysList.Remove(monkey);
+        if(occupiedMonkeysList.Contains(monkey)) occupiedMonkeysList.Remove(monkey);
+        if(unoccupiedMonkeysList.Contains(monkey)) unoccupiedMonkeysList.Remove(monkey);
     }
 
     public static float GetRecruitDistance()
@@ -142,6 +150,9 @@ public class PlayerCommands : MonoBehaviour
         {
             io.RemoveAllMinions();
         }
+        
+        // Play recall animation
+        animator.SetTrigger("Recall");
     }
 
     // true if success
@@ -161,6 +172,9 @@ public class PlayerCommands : MonoBehaviour
         occupiedMonkeysList.Add(monkeyToOccupy);
         unoccupiedMonkeysList.Remove(monkeyToOccupy);
         UpdateFollowerCounts();
+        
+        // Play Send animation
+        animator.SetTrigger("Send");
 
         // Interactable Object ------------------
         foreach(Transform interactableObject in interactableObjects)

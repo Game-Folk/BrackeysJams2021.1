@@ -6,6 +6,7 @@ using Pathfinding;
 
 public class Monkey : BaseAIUnit
 {
+    [SerializeField] private bool startRecruited = false;
     [SerializeField] private Color recruitColor;
     [SerializeField] private SpriteRenderer spriteRenderer;
 
@@ -29,6 +30,7 @@ public class Monkey : BaseAIUnit
         playerCommands = PlayerCommands.instance;
 
         playerCommands.AddToUnrecruitedList(this);
+        if(startRecruited) SetRecruitedStatus(true); // so they can immediately, but not be controlled
 
         base.Start();
     }
@@ -52,8 +54,8 @@ public class Monkey : BaseAIUnit
         Sequence attackingSequence = new Sequence(new List<Node> { ifAnyAttackTargetInRangeSetClosestNode, setFollowTargetNode });
         Sequence standingBySequence = new Sequence(new List<Node> { hasALocationTargetNode, setFollowTargetNode });
 
-        Selector pickActionSelector = new Selector(new List<Node> { followingSequence, interactingSequence, 
-                                                            attackingSequence, standingBySequence });
+        Selector pickActionSelector = new Selector(new List<Node> { followingSequence, attackingSequence, 
+                                                            interactingSequence, standingBySequence });
 
         Sequence pickRecruitedActionSequence = new Sequence(new List<Node> { isRecruitedNode, pickActionSelector });
 
@@ -75,11 +77,27 @@ public class Monkey : BaseAIUnit
         }
     }
 
+    public override void UpdateAnimator()
+    {
+        base.UpdateAnimator();
+        
+        // Carrying
+        if(interactTarget == null)
+        {
+            animator.SetBool("Carrying", false);
+        }
+        else
+        {
+            animator.SetBool("Carrying", true);
+        }
+    }
+
     public override void Die(float timeUntilDestroy)
     {
-        unitManager.RemoveAnimalFromAttackableList(this.transform);
-
         base.Die(timeUntilDestroy);
+
+        unitManager.RemoveAnimalFromAttackableList(this.transform);
+        playerCommands.RemoveMonkeyFromPlayer(this);
     }
     
     public bool GetRecruitedStatus()
@@ -106,6 +124,9 @@ public class Monkey : BaseAIUnit
     }
     public void SetRecalledStatus(bool b)
     {
+        // animations
+        animator.SetTrigger("Recalled");
+
         recalled = b;
         targetTransform = PlayerCommands.instance.transform;
         ResetActionFlags("Following");
@@ -117,6 +138,8 @@ public class Monkey : BaseAIUnit
     }
     public void SetInteractTarget(InteractableObject newInteractTarget)
     {
+        PlayAffirmativeActionSound();
+
         interactTarget = newInteractTarget;
         ResetActionFlags("Interacting");
     }
