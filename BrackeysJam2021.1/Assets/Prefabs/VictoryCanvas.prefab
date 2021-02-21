@@ -385,7 +385,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 789033611, guid: 5742449112078c84dae4185ac77e8ce5, type: 3}
         m_MethodName: GoToMainMenu
         m_Mode: 1
         m_Arguments:
@@ -824,7 +824,7 @@ MonoBehaviour:
   m_OnClick:
     m_PersistentCalls:
       m_Calls:
-      - m_Target: {fileID: 0}
+      - m_Target: {fileID: 789033611, guid: 5742449112078c84dae4185ac77e8ce5, type: 3}
         m_MethodName: NextLevel
         m_Mode: 1
         m_Arguments:

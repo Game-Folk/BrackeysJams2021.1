@@ -11,7 +11,7 @@ public class Monkey : BaseAIUnit
     [SerializeField] private SpriteRenderer spriteRenderer;
 
     private UnitManager unitManager = null;
-    private EnemySpawner enemySpawner = null;
+    // private EnemySpawner enemySpawner = null;
     private PlayerCommands playerCommands = null;
     private bool recruited = false;
     private bool recalled = false;
@@ -26,7 +26,7 @@ public class Monkey : BaseAIUnit
     public override void Start()
     {
         unitManager = UnitManager.instance;
-        enemySpawner = EnemySpawner.instance;
+        // enemySpawner = EnemySpawner.instance;
         playerCommands = PlayerCommands.instance;
 
         playerCommands.AddToUnrecruitedList(this);

@@ -12,6 +12,7 @@ public class BaseAIUnit : BaseUnit
     [SerializeField] protected float timeToDestroyStandByTarget = 3f;
     [SerializeField] private Transform spriteTransform = null;
     [SerializeField] private AudioSource affirmativeActionAudio = null;
+    [SerializeField] private AudioSource attackAudio = null;
 
     private AIPath aIPath;
     private AIDestinationSetter aIDestinationSetter;
@@ -20,6 +21,7 @@ public class BaseAIUnit : BaseUnit
     protected Transform targetTransform = null;
     protected BaseUnit attackTarget = null;
     protected Transform standByLocation = null;
+    private bool attackAudioPlaying = false;
 
     protected Node topNode;
 
@@ -135,10 +137,12 @@ public class BaseAIUnit : BaseUnit
         if(attackTarget == null)
         {
             animator.SetBool("Attacking", false);
+            StopAttackSound();
         }
         else
         {
             animator.SetBool("Attacking", true);
+            PlayAttackSound();
         }
     }
     
@@ -205,6 +209,28 @@ public class BaseAIUnit : BaseUnit
         {
             affirmativeActionAudio.Play();
         }
+    }
+
+    protected void PlayAttackSound()
+    {
+        if(attackAudio == null) return;
+
+        // if playing, don't play again
+        if(attackAudioPlaying) return;
+
+        attackAudio.Play();
+        attackAudioPlaying = true;
+    }
+
+    protected void StopAttackSound()
+    {
+        if(attackAudio == null) return;
+        
+        // if not playing, don't stop again
+        if(!attackAudioPlaying) return;
+
+        attackAudio.Stop();
+        attackAudioPlaying = false;
     }
 
     private void CorrectDirectionFacing()

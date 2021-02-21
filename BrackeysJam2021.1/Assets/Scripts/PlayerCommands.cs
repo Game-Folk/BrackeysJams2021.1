@@ -11,6 +11,7 @@ public class PlayerCommands : MonoBehaviour
     [SerializeField] private float recruitDistance = 5f;
     [SerializeField] private TMP_Text followerCountText = null;
     [SerializeField] protected Animator animator = null;
+    [SerializeField] private AudioSource recallAudio = null;
 
     public static PlayerCommands instance;
     private void Awake()
@@ -153,6 +154,9 @@ public class PlayerCommands : MonoBehaviour
         
         // Play recall animation
         animator.SetTrigger("Recall");
+
+        // Play recall sound
+        recallAudio.Play();
     }
 
     // true if success

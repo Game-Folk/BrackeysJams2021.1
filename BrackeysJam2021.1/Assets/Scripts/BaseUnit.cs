@@ -60,7 +60,6 @@ public class BaseUnit : MonoBehaviour
         // Destoy object
         if(gameObject != null && !preventDestroy)
         {
-            print(preventDestroy);
             Destroy(this.gameObject, timeUntilDestroy);
         }
     }

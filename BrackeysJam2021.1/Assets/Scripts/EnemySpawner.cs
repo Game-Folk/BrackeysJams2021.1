@@ -9,16 +9,16 @@ public class EnemySpawner : MonoBehaviour
     [SerializeField] private int numToSpawn = 3;
     [SerializeField] private GameObject enemy = null;
 
-    public static EnemySpawner instance;
-    private void Awake()
-    {
-        if (instance != null)
-        {
-            Debug.LogError("More than one EnemySpawner in scene!");
-            return;
-        }
-        instance = this;
-    }
+    // public static EnemySpawner instance;
+    // private void Awake()
+    // {
+    //     if (instance != null)
+    //     {
+    //         Debug.LogError("More than one EnemySpawner in scene!");
+    //         return;
+    //     }
+    //     instance = this;
+    // }
 
     // Start is called before the first frame update
     void Start()
@@ -26,10 +26,10 @@ public class EnemySpawner : MonoBehaviour
         StartCoroutine(SpawnEnemies());
     }
 
-    public void SetAllowedToSpawnStatus(bool b)
-    {
-        allowedToSpawn = b;
-    }
+    // public void SetAllowedToSpawnStatus(bool b)
+    // {
+    //     allowedToSpawn = b;
+    // }
 
     private IEnumerator SpawnEnemies()
     {

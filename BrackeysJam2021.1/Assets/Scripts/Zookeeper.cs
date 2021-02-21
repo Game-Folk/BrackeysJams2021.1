@@ -8,6 +8,7 @@ public class Zookeeper : BaseAIUnit
     [SerializeField] private GameObject keyPrefab = null;
 
     private UnitManager unitManager;
+    private bool isZookeeperDead = false;
 
     public override void Start()
     {
@@ -35,6 +36,9 @@ public class Zookeeper : BaseAIUnit
     public override void Die(float timeUntilDestroy)
     {
         base.Die(timeUntilDestroy);
+
+        if(isZookeeperDead) return; // only die once
+        isZookeeperDead = true;
         
         unitManager.RemoveHumanFromAttackableList(this.transform);
 
