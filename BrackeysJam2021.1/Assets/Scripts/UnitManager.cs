@@ -1,9 +1,13 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
 
 public class UnitManager : MonoBehaviour
 {
+    [SerializeField] private TMP_Text scoreText = null;
+    private int score = 0;
+
     private List<Transform> attackableAnimalsList = new List<Transform>();
     private List<Transform> attackableHumansList = new List<Transform>();
 
@@ -43,5 +47,10 @@ public class UnitManager : MonoBehaviour
     public void RemoveHumanFromAttackableList(Transform t)
     {
         attackableHumansList.Remove(t);
+        score++;
+        if(scoreText != null)
+        {
+            scoreText.text = "Score: " + score;
+        }
     }
 }
